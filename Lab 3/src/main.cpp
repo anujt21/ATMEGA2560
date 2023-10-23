@@ -17,8 +17,20 @@
 #include "timer.h"
 #include "lcd.h"
 
-// defines
+// Connections:
+/*
+RS  - PB6
+E   - PB4
 
+D4  - PA0
+D5  - PA1
+D6  - PA2
+D7  - PA3
+
+LED - PD0-3
+
+Switch  - PB3
+*/
 
 /*
  * Define a set of states that can be used in the state machine using an enum.
@@ -56,6 +68,14 @@ int main(){
   // initialize timer 0 and timer 1
   initTimer0();
   initTimer1();
+  Serial.println ("Initialization of timers complete");
+
+  initLCD();
+  Serial.println ("Init of LCD complete");
+  moveCursor(0,0);
+  writeString("Blinking rate = ");
+  print_state(delay_time);
+
 
   /*
   moveCursor(0, 0); // moves the cursor to 0,0 position
@@ -91,7 +111,9 @@ int main(){
       break;  
 
       case debounce_release:
+      print_state(delay_time);
       delayUs(100);
+      // Change text on LED
       buttonState = wait_press;
       break;
     }
@@ -109,13 +131,11 @@ int main(){
 
 ISR(PCINT0_vect){
   if(buttonState == wait_press){
-    Serial.println("Button pressed. Moving to debounce");
     buttonState = debounce_press;
   }
   else if(buttonState == wait_release){
-    Serial.println("Button released");
     delay_time = 300 - delay_time;
-    //delay_time = 1200 - delay_time;
+    
     buttonState = debounce_release;
   }
 }

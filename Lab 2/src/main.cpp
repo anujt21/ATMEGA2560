@@ -43,7 +43,7 @@ int main(){
   initSwitchPB3();
   // initialize timer 0 and timer 1
   initTimer0();
-  initTIMER1();
+  initTimer1();
 
   /*
   * Implement a state machine in the while loop which achieves the assignment

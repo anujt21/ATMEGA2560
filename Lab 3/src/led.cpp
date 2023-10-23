@@ -10,7 +10,7 @@
 /* Initialize PD0, PD1, PD2, and PD3 to outputs
 */
 void initLED(){
-    DDRA |= 0x0F;
+    DDRD |= 0x0F;
 }
 
 /* This must be one line of code.
@@ -19,5 +19,5 @@ void initLED(){
 * "num" to the appropriate bits of PORTD.
 */
 void turnOnLEDWithChar(unsigned char num){
-    PORTA = (PORTA & 0xF0) | (num & 0x0F);
+    PORTD = (PORTD & 0xF0) | (num & 0x0F);
 }

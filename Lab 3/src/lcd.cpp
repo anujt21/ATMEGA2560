@@ -9,9 +9,13 @@
 
 /*
  * Initializes all pins related to the LCD to be outputs
+ * PORTA0, PORTA1, PORTA2, and PORTA3 are used for the data pins on the LCD with
+ * PORTA0 corresponding to the least significant bit
+ * PORTB4 and PORTB6 are used for the enable pin and RS pin
  */
 void initLCDPins(){
-
+  DDRA |= 0x0F;                   // Data pins
+  DDRB |= (1<<DDB4) | (1<<DDB6);  // Enable and RS pins
 }
 
 
@@ -26,7 +30,14 @@ void initLCDPins(){
  */
 void fourBitCommandWithDelay(unsigned char data, unsigned int delay){
 
-  PORTA = data;
+  PORTA = (PORTA & 0xF0) | (data & 0x0F); // set up data on the data pins
+  PORTB &= ~(1<<PB6);                     // set RS to 0
+
+  PORTB |= (1<<PB4);                      // set enable to 1
+  delayUs(1);                             // delay 1 us
+  PORTB &= ~(1<<PB4);                     // set enable to 0
+
+  delayUs(delay);                            // delay us
 }
 
 
@@ -43,7 +54,21 @@ void fourBitCommandWithDelay(unsigned char data, unsigned int delay){
  * 6. delay the provided number in MICROseconds.
  */
 void eightBitCommandWithDelay(unsigned char command, unsigned int delay){
- 
+  PORTA = (PORTA & 0xF0) | ((command >> 4) & 0x0F);  // set up top 4 bits of data on the data pins
+  PORTB &= ~(1<<PB6);                         // set RS to 0
+
+  PORTB |= (1<<PB4);                          // set enable to 1
+  delayUs(1);                                 // delay 1 ms
+  PORTB &= ~(1<<PB4);                         // set enable to 0
+
+  PORTA = (PORTA & 0xF0) | (command & 0x0F);  // set up bottom 4 bits of data on the data pins
+  PORTB &= ~(1<<PB6);                         // set RS to 0
+
+  PORTB |= (1<<PB4);                          // set enable to 1
+  delayUs(1);                                 // delay 1 ms
+  PORTB &= ~(1<<PB4);                         // set enable to 0
+
+  delayUs(delay);                           // delay us
 }
 
 
@@ -57,7 +82,20 @@ void eightBitCommandWithDelay(unsigned char command, unsigned int delay){
  * 6. delay is always 46 MICROseconds for a character write
  */
 void writeCharacter(unsigned char character){
- 
+  PORTA = (PORTA & 0xF0) | ((character >> 4) & 0x0F);  // set up top 4 bits of data on the data pins
+  PORTB |= (1<<PB6);                         // set RS to 1
+
+  PORTB |= (1<<PB4);                          // set enable to 1
+  delayUs(1);                                 // delay 1 ms
+  PORTB &= ~(1<<PB4);                         // set enable to 0
+
+  PORTA = (PORTA & 0xF0) | (character & 0x0F);  // set up bottom 4 bits of data on the data pins
+
+  PORTB |= (1<<PB4);                          // set enable to 1
+  delayUs(1);                                 // delay 1 ms
+  PORTB &= ~(1<<PB4);                         // set enable to 0
+
+  delayUs(46);
 }
 
 
@@ -69,7 +107,12 @@ void writeCharacter(unsigned char character){
  * that this should just call writeCharacter multiple times.
  */
 void writeString(const char *string){
+  unsigned int i = 0;
 
+  while(string[i] != '\0'){
+    writeCharacter(string[i]);
+    i++;
+  }
 }
 
 
@@ -79,9 +122,23 @@ void writeString(const char *string){
  * This can be done using the eightBitCommandWithDelay with correct arguments
  */
 void moveCursor(unsigned char x, unsigned char y){
-	
+	unsigned char address;
+  address = (0x80) | (x<<6) | y;
+  eightBitCommandWithDelay(address, 40);
 }
 
+
+void print_state(unsigned int delay){
+  moveCursor(1,0);
+  if(delay==100){
+    writeString("Fast");
+  }
+  else{
+    writeString("Slow");
+  }
+
+
+}
 
 /* This is the procedure outline on the LCD datasheet page 4 out of 9.
  * This should be the last function you write as it largely depends on all other
@@ -89,29 +146,39 @@ void moveCursor(unsigned char x, unsigned char y){
  */
 void initLCDProcedure(){
   // Delay 15 milliseconds
+  delayMs(50);
 
   // Write 0b0011 to DB[7:4] and delay 4100 microseconds
+  fourBitCommandWithDelay(0b0011, 4100);
   
   // Write 0b0011 to DB[7:4] and delay 100 microseconds
+  fourBitCommandWithDelay(0b0011, 100);
 
   // The data sheet does not make this clear, but at this point you are issuing
   // commands in two sets of four bits. You must delay after each command
   // (which is the second set of four bits) an amount specified on page 3 of
   // the data sheet.
   // write 0b0011 to DB[7:4] and 100us delay
+  fourBitCommandWithDelay(0b0011, 100);
 
   // write 0b0010 to DB[7:4] and 100us delay.
+  fourBitCommandWithDelay(0b0010, 100);
 
   // Function set in the command table with 53us delay
+  eightBitCommandWithDelay(0x28, 53);
 
   // Display off in the command table with 53us delay
+  eightBitCommandWithDelay(0x08, 53);
 
   // Clear display in the command table. Remember the delay is longer!!!
+  eightBitCommandWithDelay(0x01, 3000);
 
   // Entry Mode Set in the command table.
+  eightBitCommandWithDelay(0x06, 53);
 
   // Display ON/OFF Control in the command table. (Yes, this is not specified),
   // in the data sheet, but you have to do it to get this to work. Yay datasheets!)
+  eightBitCommandWithDelay(0x0C, 53);
 
 }
 
