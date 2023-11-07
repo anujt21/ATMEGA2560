@@ -127,7 +127,8 @@ void moveCursor(unsigned char x, unsigned char y){
   eightBitCommandWithDelay(address, 40);
 }
 
-
+// Prints the speed of the LED by checking the
+// delay time
 void print_state(unsigned int delay){
   moveCursor(1,0);
   if(delay==100){

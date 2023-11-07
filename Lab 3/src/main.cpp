@@ -85,6 +85,7 @@ int main(){
   initLCD();
   */
 
+
   unsigned int num = 0;
 	while (1) {
 
