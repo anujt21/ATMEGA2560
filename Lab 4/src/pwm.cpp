@@ -23,6 +23,8 @@ void initPWMTimer3() {
   TCCR3B |= (1 << CS30);
   TCCR3B &= ~((1 << CS31) | (1 << CS32));
 
+  OCR3A = 1023;
+
 }
 
 void initPWMTimer4() {
@@ -45,9 +47,12 @@ void initPWMTimer4() {
   // CS30 = 1, CS31 = 0, CS32 = 0
   TCCR4B |= (1 << CS40);
   TCCR4B &= ~((1 << CS41) | (1 << CS42));
+
+  OCR4A = 0;
 }
 
 void changeDutyCycle(unsigned int num){
     OCR3A = num;
     OCR4A = 1023 - num;
+    
 }

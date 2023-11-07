@@ -63,22 +63,32 @@ int main(){
   initPWMTimer4();
   seven_segment_init();
   initSwitchPD0();
+  
+  
+  Serial.println("Hello");
+  delayMs(1000);
+  delayMs(1000);
+  delayMs(1000);
+  delayMs(1000);
+  delayMs(1000);
+  Serial.println("After 5 sec");
+  
 
   
 	while (1) {
     unsigned int adc_value = read_adc();
-    Serial.println(adc_value);
+    //Serial.println(adc_value);
     changeDutyCycle(adc_value);
-
     
-
+    
+    
     switch(buttonState){
       case active:
       enableSwitch();   // enables INT0
       break;
 
       case debounce:
-      delayMs(1);
+      delayUs(100);
       buttonState = pause;
       break;
 
@@ -93,7 +103,6 @@ int main(){
 
 	}
   
-  
   return 0;
 }
 
@@ -107,7 +116,6 @@ ISR(INT0_vect){
   if(buttonState == active){
     buttonState = debounce;
   }
-  
 }
 
 /*

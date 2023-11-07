@@ -39,7 +39,7 @@ void countdown(){
     unsigned int n = 9;
     while(n!=0){
         display(n);
-        delaySec(1);
+        delayMs(1000);
         n--;
     }
 }

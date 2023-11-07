@@ -17,9 +17,8 @@ void initADC(){
     ADMUX &= ~(1 << ADLAR);
 
     // Specify ADC input channel and mode
-    //Set ADC7 as single-ended input with MUX[5:0] = 0b000111
-    ADMUX |= (1 << MUX2) | (1 << MUX1) | (1 << MUX0);
-    ADMUX &= ~((1 << MUX4) | (1 << MUX3));
+    //Set ADC0 as single-ended input with MUX[5:0] = 0b000000
+    ADMUX &= ~((1 << MUX4) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1) | (1 << MUX0));
     ADCSRB &= ~(1 << MUX5);
 
     // set Auto Trigger Source Selection
