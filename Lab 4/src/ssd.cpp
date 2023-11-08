@@ -11,7 +11,7 @@
 void seven_segment_init(){
 
     DDRC = 0xFF; //Setting PortC as an output
-    PORTC = 0xFF; //common cathode; initializing all segments off
+    PORTC = 0x00; //common cathode; initializing all segments off
 
 }
 
@@ -19,16 +19,16 @@ void seven_segment_init(){
 void display(int num){
     //look up table for common cathode for nums 1-9
     unsigned char lookup[10] = {
-        0x3F, //0
-        0x06, //1
-        0x5B, //2
-        0x4F, //3
-        0x66, //4
-        0x6D, //5
-        0x7D, //6
-        0x07, //7
-        0x7F, //8
-        0x6F  //9
+        0x3f,
+        0x06,
+        0x5b,
+        0x4f,
+        0x66,
+        0x6d,
+        0x7d,
+        0x07,
+        0x7f,
+        0x6f
     };
 
     PORTC = lookup[num]; // display digit
@@ -40,6 +40,9 @@ void countdown(){
     while(n!=0){
         display(n);
         delayMs(1000);
-        n--;
+        n = n-1;
     }
+    display(0);
+    delayMs(1000);
+    PORTC = 0x00;
 }

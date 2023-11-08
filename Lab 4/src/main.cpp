@@ -41,9 +41,9 @@ Switch  - PB3
 //Define a set of states that can be used in the state machine using an enum.
 
 typedef enum{
-  active, debounce, pause
+  wait_press, debounce_press, wait_release, debounce_release, pause
 }StateType;
-volatile StateType buttonState = active; 
+volatile StateType buttonState = wait_press; 
 
 
 int main(){
@@ -63,16 +63,6 @@ int main(){
   initPWMTimer4();
   seven_segment_init();
   initSwitchPD0();
-  
-  
-  Serial.println("Hello");
-  delayMs(1000);
-  delayMs(1000);
-  delayMs(1000);
-  delayMs(1000);
-  delayMs(1000);
-  Serial.println("After 5 sec");
-  
 
   
 	while (1) {
@@ -83,20 +73,36 @@ int main(){
     
     
     switch(buttonState){
-      case active:
-      enableSwitch();   // enables INT0
+      case wait_press:
+      //sei();
+      Serial.println("In active");
+      //enableSwitch();   // enables INT0
       break;
 
-      case debounce:
+      case debounce_press:
+      delayUs(100);
+      Serial.println("In debounce");
+      buttonState = wait_release;
+      break;
+
+      case wait_release:
+      Serial.println("In wait releasse");
+      break;
+
+      case debounce_release:
       delayUs(100);
       buttonState = pause;
-      break;
 
       case pause:
+      //cli();
       disableSwitch();    // disables INT0
       changeDutyCycle(511);
+      Serial.println("Starting Countdown");
       countdown();
-      buttonState = active;
+      enableSwitch();
+      buttonState = wait_press;
+
+
       break;  
 
     }
@@ -113,8 +119,13 @@ int main(){
 */
 
 ISR(INT0_vect){
-  if(buttonState == active){
-    buttonState = debounce;
+  if(buttonState == wait_press){
+    buttonState = debounce_press;
+    Serial.println("In ISR now");
+  }
+  else if(buttonState == wait_release){
+    buttonState = debounce_release;
+    Serial.println("In ISR now release");
   }
 }
 

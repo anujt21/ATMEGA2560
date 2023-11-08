@@ -22,21 +22,31 @@ void initTimer1(){
 
 /* This delays the program an amount of microseconds specified by unsigned int delay.
 */
-void delayUs(unsigned int delay){
-    delayCounterUs = delay;
+void delayMs(unsigned int delay){
+    delayCounter = delay;
 
-    // turn on clock with the CS bits and start counting
-    // Use Prescaleer of 8 (2 counts is  1 us)
-    TCCR1B |= (1 << CS11);
-    TCCR1B &= ~((1 << CS12)| (1 << CS10));
+    // Set Prescalar to 64
+    TCCR1B |= (1 << CS11) | (1 << CS10);
+    TCCR1B &= ~(1 << CS12);
 
-    OCR1A = 1;
+    OCR1A = 249;
 
     // Start timer at 0
     TCNT1 = 0;
 
+    while(delayCounter > 0);
+    /*
+    TIFR1 |= (1 << OCF1A);
+
     // Wait for the interrupt to handle the delay
-    while(delayCounterUs > 0);
+    while(delayCounterUs > 0){
+        TIFR1 |= (1 << OCF1A);
+        TCNT1 = 0;
+
+        while(( TIFR1 & (1 << OCF1A)) == 0);
+        delayCounterUs--;
+    }
+    */
 
     TCCR1B &= ~( (1 <<  CS10) | (1 <<  CS11) | (1 <<  CS12));
 }
@@ -58,25 +68,39 @@ void initTimer0(){
 * such that your timer is precise to 1 millisecond and can be used for
 * 100-2000 milliseconds
 */
-void delayMs(unsigned int delay){
+void delayUs(unsigned int delay){
     delayCounter = delay;
 
-    // Set Prescalar to 64
-    TCCR0B |= (1 << CS01) | (1 << CS00);
-    TCCR0B &= ~(1 << CS02);
+    // turn on clock with the CS bits and start counting
+    // Use Prescaleer of 8 (2 counts is  1 us)
+    TCCR0B |= (1 << CS01);
+    TCCR0B &= ~((1 << CS02)| (1 << CS00));
 
     // Set compare value to 249 for 1 ms
-    OCR0A = 249;
+    OCR0A = 1;
 
     // Start timer at 0
     TCNT0 = 0;
 
-    // Wait for the interrupt to handle the delay
     while(delayCounter > 0);
+
+    /*
+    TIFR0 |= (1 << OCF0A);
+
+    // Wait for the interrupt to handle the delay
+    while(delayCounter > 0){
+        TIFR0 |= (1 << OCF0A);
+        TCNT0 = 0;
+
+        while(( TIFR0 & (1 << OCF0A)) == 0);
+        delayCounterUs--;
+    }
+    */
 
     // Turn off clock
     TCCR0B &= ~( (1 << CS00) | (1 << CS01) | (1 << CS02) );
 }
+
 
 // This is the interrupt handler for Timer0 Compare Match A
 ISR(TIMER0_COMPA_vect){
@@ -86,7 +110,7 @@ ISR(TIMER0_COMPA_vect){
 }
 
 ISR(TIMER1_COMPA_vect){
-    if(delayCounterUs > 0){
-        delayCounterUs--;
+    if(delayCounter > 0){
+        delayCounter--;
     }
 }
