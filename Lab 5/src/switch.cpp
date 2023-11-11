@@ -1,38 +1,31 @@
-// Description: This file implements the initialization of an external
-// switch.
-//----------------------------------------------------------------------//
+/*
+## switch.cpp
+1. Uses a switch to silence the audio chirping alarm.
+*/
 
 #include "switch.h"
 #include <avr/io.h>
 
-/*
- * Initializes pull-up resistor on PB3 and sets it into input mode
- */
-void initSwitchPD0(){
+void initSwitch(){
   //set the data direction register to input
-
-  DDRD &= ~(1<<DDD0); // set direction for input
-  PORTD |= (1 << PORTD0);  // enable the pullup resistor for stable input
-  
-  
-  EICRA |= (1 << ISC00);
-  EICRA &= ~(1 << ISC01);
-
-  EIMSK |= (1 << INT0);
-
-  /*
-  DDRB &= ~(1<<DDB3); // set direction for input
-  PORTB |= (1 << PORTB3);  // enable the pullup resistor for stable input
-  
-  PCICR |= (1 << PCIE0);   // enable pin change for PORT B
-  PCMSK0 |= (1 << PCINT3);*/
+  DDRA &= ~(1<<DDA0); // set direction for input (pin 22)
+  PORTA |= (1 << PORTA0);  // enable the pullup resistor for stable input
 }
 
-
-void enableSwitch(){
-  EIMSK |= (1 << INT0);
+void initalarm() {
+  // set data direction register for output;
+  // use header pin # 21 which corresponds to PORTD0
+  DDRD |= (1 << DDD0);
+  // turn off alarm initially
+  PORTD &= ~(1 << PORTD0);
 }
 
-void disableSwitch(){
-  EIMSK &= ~(1 << INT0);
+void turnon_alarm() {
+  // Write a logic one (5V) to the output of PORTD0
+  PORTD |= (1 << PORTD0);
+}
+
+void silence_alarm(){
+  // Write a logic zero (0V) to the output of PORTD0
+  PORTD &= ~(1 << PORTD0);
 }
