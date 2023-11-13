@@ -12,126 +12,79 @@
 
 #include <Arduino.h>
 #include <avr/io.h>
+
 #include "switch.h"
 #include "timer.h"
 #include "pwm.h"
-#include "adc.h"
-#include "ssd.h"
+#include "i2c.h"
 
-// Connections:
-/*
-RS  - PB6
-E   - PB4
 
-D4  - PA0
-D5  - PA1
-D6  - PA2
-D7  - PA3
 
-LED - PD0-3
+#define MPU 0x68
+#define PM  0x6b
+#define X_H 0x3b
+#define X_L 0x3c
+#define Y_H 0x3d
+#define Y_L 0x3e
+#define Z_H 0x3f
+#define Z_L 0x40
 
-Switch  - PB3
-*/
 
-/*
- * Define a set of states that can be used in the state machine using an enum.
- */
-// typedef enum .......
-
-//Define a set of states that can be used in the state machine using an enum.
-
-typedef enum{
-  wait_press, debounce_press, wait_release, debounce_release, pause
-}StateType;
-volatile StateType buttonState = wait_press; 
+volatile unsigned int x_value;
+volatile unsigned int y_value;
+volatile unsigned int z_value;
 
 
 int main(){
 
   sei();
 
-  Serial.begin(9600);
-  Serial.println("Start");
-  Serial.flush();
-  // Initializations
-  
-  
-  initADC();
   initTimer0();
   initTimer1();
-  initPWMTimer3();
-  initPWMTimer4();
-  seven_segment_init();
-  initSwitchPD0();
 
+  Serial.begin(9600);
+
+  initI2C();
+  Serial.println("Completed init");
+  StartI2C_Trans(MPU);
+  Serial.println("Completed I2C transfer");
+  Serial.println(TWSR);
+  write(PM);
+  write(0x00);
+  Serial.println("Completed Setup!");
   
 	while (1) {
-    unsigned int adc_value = read_adc();
-    //Serial.println(adc_value);
-    changeDutyCycle(adc_value);
     
+    // read X value
+    Read_from(MPU, 0x3b);
+    x_value = Read_data();
+
+    Read_from(MPU, 0x3c);
+    x_value = (x_value<<8) | Read_data();
+
+    // read Y value
+    Read_from(MPU, 0x3d);
+    y_value = Read_data();
+
+    Read_from(MPU, 0x3);
+    y_value = (y_value<<8) | Read_data();
+
+    // read Z value
+    Read_from(MPU, 0x3f);
+    z_value = Read_data();
+
+    Read_from(MPU, 0x40);
+    z_value = (z_value<<8) | Read_data();
+
+    Serial.println("X, Y, Z values are: ");
+    Serial.println(x_value);
+    Serial.println(y_value);
+    Serial.println(z_value);
+    Serial.println("\n");
     
-    
-    switch(buttonState){
-      case wait_press:
-      //sei();
-      Serial.println("In active");
-      //enableSwitch();   // enables INT0
-      break;
-
-      case debounce_press:
-      delayUs(100);
-      Serial.println("In debounce");
-      buttonState = wait_release;
-      break;
-
-      case wait_release:
-      Serial.println("In wait releasse");
-      break;
-
-      case debounce_release:
-      delayUs(100);
-      buttonState = pause;
-
-      case pause:
-      //cli();
-      disableSwitch();    // disables INT0
-      changeDutyCycle(511);
-      Serial.println("Starting Countdown");
-      countdown();
-      enableSwitch();
-      buttonState = wait_press;
-
-
-      break;  
-
-    }
 
 	}
   
   return 0;
 }
 
-/* Implement an Pin Change Interrupt which handles the switch being
-* pressed and released. When the switch is pressed and released, the LEDs
-* change at twice the original rate. If the LEDs are already changing at twice
-* the original rate, it goes back to the original rate.
-*/
-
-ISR(INT0_vect){
-  if(buttonState == wait_press){
-    buttonState = debounce_press;
-    Serial.println("In ISR now");
-  }
-  else if(buttonState == wait_release){
-    buttonState = debounce_release;
-    Serial.println("In ISR now release");
-  }
-}
-
-/*
-ISR(PCINT0_vect){
-  if(buttonState == active){
-    buttonState = debounce;
-  }
-}*/
