@@ -14,18 +14,18 @@ void initSwitch(){
 
 void initalarm() {
   // set data direction register for output;
-  // use header pin # 21 which corresponds to PORTD0
-  DDRD |= (1 << DDD0);
+  // use header pin # 31 which corresponds to PORTD0
+  DDRC |= (1 << DDC6);
   // turn off alarm initially
-  PORTD &= ~(1 << PORTD0);
+  PORTC &= ~(1 << PORTC6);
 }
 
 void turnon_alarm() {
   // Write a logic one (5V) to the output of PORTD0
-  PORTD |= (1 << PORTD0);
+  PORTC |= (1 << PORTC6);
 }
 
 void silence_alarm(){
   // Write a logic zero (0V) to the output of PORTD0
-  PORTD &= ~(1 << PORTD0);
+  PORTC &= ~(1 << PORTC6);
 }
