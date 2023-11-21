@@ -3,7 +3,7 @@
 
 void init_spi();
 void write_execute(unsigned char CMD, unsigned char data);
-void frowny_face();
+void frown_face();
 void happy_face();
 
 #endif

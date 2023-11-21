@@ -5,8 +5,5 @@
 #define SWITCH_H
 
 void initSwitch();
-void initalarm();
-void turnon_alarm();
-void silence_alarm();
 
 #endif

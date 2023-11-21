@@ -7,48 +7,41 @@ debouncing
 #include "timer.h"
 #include <avr/io.h>
 
+//Global variable for counting ms and us
+volatile unsigned int delayCounter = 0;
+volatile unsigned int delayCounterUs = 0;
+
 /* Initialize timer 1, you should not turn the timer on here. Use CTC mode  .*/
-void initTimer1(){ 
-    TCCR1A &= ~ (1 << WGM10);
-    TCCR1A &= ~ (1 << WGM11);
-    TCCR1B |=   (1 << WGM12);
-    TCCR1B &= ~ (1 << WGM13);
+void initTimer1(){
+    TCCR1A &= ~( (1 << WGM10) | ( 1<< WGM11));
+    TCCR1B |= ( 1 << WGM12);
+    TCCR1B &= ~ ( 1 << WGM13);
+
+    // Enable Timer0 Compare Match A Interrupt
+    TIMSK1 |= (1 << OCIE1A);
 }
 
 /* This delays the program an amount of microseconds specified by unsigned int delay.
 */
 void delayMs(unsigned int delay){
-    unsigned int count = 0;
-    // set outout compare value
-    OCR0A = 249;
+    delayCounter = delay;
 
-    // turn on clock with the CS bits and start counting
-    // Use Prescaleer of 8
-    TCCR0B |=  (1 << CS00);
-    TCCR0B |=  (1 << CS01);
-    TCCR0B &= ~(1 << CS02);
+    // Set Prescalar to 64
+    TCCR1B |= (1 << CS11) | (1 << CS10);
+    TCCR1B &= ~(1 << CS12);
 
+    OCR1A = 249;
 
-    // set TCNT0 = 0
-    TCNT0 = 0;
+    // Start timer at 0
+    TCNT1 = 0;
 
-    // set output compare flag  TIFR0 down by writing a logic 1
-    TIFR0 |= (1 << OCF0A);
+    while(delayCounter > 0);
 
-    
+    TCCR1B &= ~( (1 <<  CS10) | (1 <<  CS11) | (1 <<  CS12));
+}
 
-    // poll the flag OCF1A bit to see when it is raised
-     while (count < delay){
-        TIFR0 |= (1 << OCF0A);
-        TCNT0 = 0;
-        // while the flag bit OCF1A is down , do nothing
-        while (( TIFR0 & ( 1 << OCF0A)) == 0) ;
-        count++;
+ISR(TIMER1_COMPA_vect){
+    if(delayCounter > 0){
+        delayCounter--;
     }
-    
-    // exit out we have our delay required
-    // turn off clock
-    TCCR0B &= ~(1 << CS02);
-    TCCR0B &= ~(1 << CS01); 
-    TCCR0B &= ~(1 << CS00);
 }

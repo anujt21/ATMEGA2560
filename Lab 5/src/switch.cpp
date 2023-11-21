@@ -8,24 +8,11 @@
 
 void initSwitch(){
   //set the data direction register to input
-  DDRA &= ~(1<<DDA0); // set direction for input (pin 22)
-  PORTA |= (1 << PORTA0);  // enable the pullup resistor for stable input
-}
+  DDRD &= ~(1<<DDD2);      // set direction for input 
+  PORTD |= (1 << PORTD2);  // enable the pullup resistor for stable input
 
-void initalarm() {
-  // set data direction register for output;
-  // use header pin # 21 which corresponds to PORTD0
-  DDRD |= (1 << DDD0);
-  // turn off alarm initially
-  PORTD &= ~(1 << PORTD0);
-}
+  EICRA |= (1 << ISC20);
 
-void turnon_alarm() {
-  // Write a logic one (5V) to the output of PORTD0
-  PORTD |= (1 << PORTD0);
-}
+  EIMSK |= (1 << INT2);
 
-void silence_alarm(){
-  // Write a logic zero (0V) to the output of PORTD0
-  PORTD &= ~(1 << PORTD0);
 }

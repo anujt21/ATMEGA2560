@@ -31,7 +31,7 @@ void write_execute(unsigned char CMD, unsigned char data) {
     PORTB |= (1 << PORTB0); // disable chip select to end SPI frame
 }
 
-void frowny_face(){
+void frown_face(){
 write_execute(0x0A, 0x08);  // brightness control
 write_execute(0x0B, 0x07); // scanning all rows and columns
 write_execute(0x0C,0x01);  // set shutdown register to normal operation (0x01)
