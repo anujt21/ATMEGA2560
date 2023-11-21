@@ -22,12 +22,12 @@
 
 
 #define MPU 0x68
-#define PM  0x6b
-#define X_H 0x3b
-#define X_L 0x3c
-#define Y_H 0x3d
-#define Y_L 0x3e
-#define Z_H 0x3f
+#define PM  0x6B
+#define X_H 0x3B
+#define X_L 0x3C
+#define Y_H 0x3D
+#define Y_L 0x3E
+#define Z_H 0x3F
 #define Z_L 0x40
 
 
@@ -79,25 +79,34 @@ int main(){
 	while (1) { 
 
     // read X value
-    Read_from(MPU, 0x3b);
+    Read_from(MPU, X_H);
     x_value = Read_data();
     
     Read_from(MPU, 0x3c);
     x_value = (x_value<<8) | Read_data();
 
     // read Y value
-    Read_from(MPU, 0x3d);
+    Read_from(MPU, Y_H);
     y_value = Read_data();
     
     Read_from(MPU, 0x3e);
     y_value = (y_value<<8) | Read_data();
 
     // read Z value
-    Read_from(MPU, 0x3f);
+    Read_from(MPU, Z_H);
     z_value = Read_data();
+    Read_from(MPU, Z_L);
+    z_value = (z_value << 8) | Read_data();
 
-    Read_from(MPU, 0x40);
-    z_value = (z_value<<8) | Read_data();
+    if((abs(y_value) > 10000) | (abs(x_value) > 10000))
+    {
+       matrixFace = frowny_face; 
+      Serial.print("The system triggered at:");
+      Serial.print(abs(x_value));
+      Serial.print(", ");
+      Serial.println(abs(y_value));
+      turnon_alarm();
+    }
 
     Serial.println("X value is:");
     Serial.println(x_value);
