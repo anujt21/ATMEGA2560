@@ -1,4 +1,3 @@
-#include "keypad.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -12,48 +11,88 @@ char hexaKeys[ROWS][COLS] = {
     {'*', '0', '#', 'D'}
 };
 
-int rowPins[ROWS] = {13, 12, 11, 10}; // Row pinouts
-int colPins[COLS] = {9, 8, 7, 6}; // Column pinouts
+int rowPins[ROWS] = {22, 23, 24, 25}; // Row pinouts
+int colPins[COLS] = {26, 27, 28, 29}; // Column pinouts
 
 void initButtons() {
     // Set pins as input with pull-up resistors for rows
-        for (int i = 0; i < ROWS; ++i) {
-        PORTB &= ~(1 << rowPins[i]);  // Set as input
-        PORTB |= (1 << rowPins[i]);   // Enable pull-up resistor
+    for (int i = 0; i < ROWS; ++i) {
+        DDRA &= ~(1 << rowPins[i]);  // Set as input
+        PORTA |= (1 << rowPins[i]);   // Enable pull-up resistor
     }
 
     // Set pins as input with pull-up resistors for columns
-    for (int i = 0; i < COLS; ++i) {
-        PORTH &= ~(1 << colPins[i]);  // Set as input
-        PORTH |= (1 << colPins[i]);   // Enable pull-up resistor
+    for (int j = 0; j < COLS; ++j) {
+        DDRA &= ~(1 << colPins[j]);  // Set as input
+        PORTA |= (1 << colPins[j]);   // Enable pull-up resistor
     }
 
 }
 
+// Define debouncing states
+enum DebounceState {
+    STATE_IDLE,
+    STATE_PRESSED,
+    STATE_RELEASED
+};
+
 char readButtons() {
     char pressedButton = '\0';
 
+    static DebounceState debounceState = STATE_IDLE;
+    static char lastButton = '\0';
+
     for (int i = 0; i < ROWS; ++i) {
         // Set current row as LOW
-        PORTB &= ~(1 << rowPins[i]);
+        PORTA &= ~(1 << rowPins[i]);
 
         for (int j = 0; j < COLS; ++j) {
             // Check if the column is LOW
-            if (!(PINH & (1 << colPins[j]))) {
-                // Check again after debounce
-                if (!(PINH & (1 << colPins[j]))) {
-                    pressedButton = hexaKeys[i][j];
-                    break;
+            if (!(PINA & (1 << colPins[j]))) {
+                switch (debounceState) {
+                    case STATE_IDLE:
+                        debounceState = STATE_PRESSED;
+                        break;
+
+                    case STATE_PRESSED:
+                        // Button is still pressed
+                        break;
+
+                    case STATE_RELEASED:
+                        debounceState = STATE_IDLE;
+                        break;
                 }
+            } 
+            
+            else {
+                switch (debounceState) {
+                    case STATE_IDLE:
+                        break;
+
+                    case STATE_PRESSED:
+                        debounceState = STATE_RELEASED;
+                        break;
+
+                    case STATE_RELEASED:
+                        // Button is still released
+                        break;
+                }
+            }
+
+            // Check again after debounce
+            if (debounceState == STATE_PRESSED && lastButton == '\0') {
+                pressedButton = hexaKeys[i][j];
+                lastButton = pressedButton;
             }
         }
 
         // Set current row back to HIGH
-        PORTB |= (1 << rowPins[i]);
+        PORTA |= (1 << rowPins[i]);
 
-        if (pressedButton != '\0') {
-            break;
+        if (debounceState == STATE_RELEASED) {
+            lastButton = '\0';
         }
     }
+
     return pressedButton;
 }
