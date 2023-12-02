@@ -1,98 +1,54 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <timer.h>
+#include <keypad.h>
 
-const int ROWS = 4; // Four rows
-const int COLS = 4; // Four columns
+// Define rows and columns
+#define ROWS 4
+#define COLS 4
 
-char hexaKeys[ROWS][COLS] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}
+// Define keymap
+const char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
 };
 
-int rowPins[ROWS] = {22, 23, 24, 25}; // Row pinouts
-int colPins[COLS] = {26, 27, 28, 29}; // Column pinouts
+// Define pin mappings for rows and columns
+uint8_t rowPins[ROWS] = {PL3, PL2, PL1, PL0}; // Using Port A pins, pins 8-5 on keypad
+uint8_t colPins[COLS] = {PC3, PC2, PC1, PC0}; // Using Port C pins, pins 4-1 on keypad
+
 
 void initButtons() {
-    // Set pins as input with pull-up resistors for rows
-    for (int i = 0; i < ROWS; ++i) {
-        DDRA &= ~(1 << rowPins[i]);  // Set as input
-        PORTA |= (1 << rowPins[i]);   // Enable pull-up resistor
-    }
+    // Initialize row pins as outputs and set them high
+    DDRL |= (1 << PL3) | (1 << PL2) | (1 << PL1) | (1 << PL0);
+    PORTL |= (1 << PL3) | (1 << PL2) | (1 << PL1) | (1 << PL0);
 
-    // Set pins as input with pull-up resistors for columns
-    for (int j = 0; j < COLS; ++j) {
-        DDRA &= ~(1 << colPins[j]);  // Set as input
-        PORTA |= (1 << colPins[j]);   // Enable pull-up resistor
-    }
+    // Initialize column pins as inputs with pull-up resistors
+    DDRC &= ~((1 << PC3) | (1 << PC2) | (1 << PC1) | (1 << PC0));
+    PORTC |= (1 << PC3) | (1 << PC2) | (1 << PC1) | (1 << PC0);
 
 }
 
-// Define debouncing states
-enum DebounceState {
-    STATE_IDLE,
-    STATE_PRESSED,
-    STATE_RELEASED
-};
 
 char readButtons() {
-    char pressedButton = '\0';
+    for (uint8_t row = 0; row < ROWS; row++) {
 
-    static DebounceState debounceState = STATE_IDLE;
-    static char lastButton = '\0';
+        PORTL &= ~(1 << rowPins[row]); // Set current row low
 
-    for (int i = 0; i < ROWS; ++i) {
-        // Set current row as LOW
-        PORTA &= ~(1 << rowPins[i]);
+        for (uint8_t col = 0; col < COLS; col++) {
 
-        for (int j = 0; j < COLS; ++j) {
-            // Check if the column is LOW
-            if (!(PINA & (1 << colPins[j]))) {
-                switch (debounceState) {
-                    case STATE_IDLE:
-                        debounceState = STATE_PRESSED;
-                        break;
-
-                    case STATE_PRESSED:
-                        // Button is still pressed
-                        break;
-
-                    case STATE_RELEASED:
-                        debounceState = STATE_IDLE;
-                        break;
-                }
-            } 
-            
-            else {
-                switch (debounceState) {
-                    case STATE_IDLE:
-                        break;
-
-                    case STATE_PRESSED:
-                        debounceState = STATE_RELEASED;
-                        break;
-
-                    case STATE_RELEASED:
-                        // Button is still released
-                        break;
-                }
-            }
-
-            // Check again after debounce
-            if (debounceState == STATE_PRESSED && lastButton == '\0') {
-                pressedButton = hexaKeys[i][j];
-                lastButton = pressedButton;
+            if (!(PINC & (1 << colPins[col]))) { // Check if button pressed
+                _delay_ms(20); // Debounce delay
+                while (!(PINC & (1 << colPins[col]))); // Wait for button release
+                PORTL |= (1 << rowPins[row]); // Set row high again
+                return keys[row][col]; // Return key pressed
             }
         }
 
-        // Set current row back to HIGH
-        PORTA |= (1 << rowPins[i]);
-
-        if (debounceState == STATE_RELEASED) {
-            lastButton = '\0';
-        }
+        PORTL |= (1 << rowPins[row]); // Set row high again
     }
-
-    return pressedButton;
+    
+    return 0; // No key pressed
 }

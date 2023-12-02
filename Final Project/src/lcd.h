@@ -1,9 +1,3 @@
-// Author:         
-// Net ID:         
-// Date:           
-// Assignment:     Lab 3
-//----------------------------------------------------------------------//
-
 #ifndef LCD_H
 #define LCD_H
 
@@ -16,6 +10,7 @@ void writeCharacter(unsigned char character);
 void writeString(const char *string);
 void moveCursor(unsigned char x, unsigned char y);
 void print_password_char(unsigned char, unsigned int x);
+void printState(unsigned int x);
 void initLCDPins();
 void initLCDProcedure();
 
