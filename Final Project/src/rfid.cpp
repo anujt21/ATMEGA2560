@@ -48,9 +48,6 @@ void initModule() {
     PORTB |= (1 << PB0); // Set SS high
 
     _delay_ms(50); // Wait for the soft reset to complete
-
-    // Configure the MFRC522
-    // ... (You need to configure the module based on your requirements)
 }
 
 // Function to read RFID data
@@ -66,9 +63,5 @@ void readModule() {
     // Read the received data from the FIFO buffer
     PORTB &= ~(1 << PB0); // Set SS (Slave Select) low
     SPI_Transceive(MFRC522_REG_FIFO_DATA | 0x80); // Read command for FIFO
-    unsigned char data = SPI_Transceive(0x00); // Dummy data
     PORTB |= (1 << PB0); // Set SS high
-
-    // Process the received data
-    // ... (You need to process the data based on your requirements)
 }
