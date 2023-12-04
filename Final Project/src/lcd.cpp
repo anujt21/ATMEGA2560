@@ -2,18 +2,6 @@
 #include "timer.h"
 #include <util/delay.h>
 
-/*
- * Initializes all pins related to the LCD to be outputs
- * PORTA0, PORTA1, PORTA2, and PORTA3 are used for the data pins on the LCD with
- * PORTA0 corresponding to the least significant bit
- * PORTB4 and PORTB6 are used for the enable pin and RS pin
- */
-void initLCDPins(){
-  DDRA |= 0x0F;                   // Data pins
-  DDRB |= (1<<DDB4) | (1<<DDB6);  // Enable and RS pins
-}
-
-
 
 /* 1. Assert bits to pins connected to DB[7:4] on the LCD screen
  *      a. data is an unsigned char which has 8 bits. Therefore, you
@@ -122,9 +110,18 @@ void moveCursor(unsigned char x, unsigned char y){
 }
 
 
+void clearDisplay(){
+  moveCursor(0,0);
+  writeString("                ");
+  moveCursor(1,0);
+  writeString("                ");
+
+}
+
+
 void print_password_char(unsigned char c, unsigned int x){
-    moveCursor(x, 0);
-    writeCharacter(c);
+  moveCursor(1, x);
+  writeCharacter(c);
 }
 
 
@@ -181,6 +178,17 @@ void initLCDProcedure(){
 
 }
 
+
+/*
+ * Initializes all pins related to the LCD to be outputs
+ * PORTA0, PORTA1, PORTA2, and PORTA3 are used for the data pins on the LCD with
+ * PORTA0 corresponding to the least significant bit
+ * PORTB4 and PORTB6 are used for the enable pin and RS pin
+ */
+void initLCDPins(){
+  DDRA |= 0x0F;                   // Data pins
+  DDRB |= (1<<DDB4) | (1<<DDB6);  // Enable and RS pins
+}
 
 
 /* Initializes Tri-state for LCD pins and calls initialization procedure.

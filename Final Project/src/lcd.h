@@ -11,6 +11,7 @@ void writeString(const char *string);
 void moveCursor(unsigned char x, unsigned char y);
 void print_password_char(unsigned char, unsigned int x);
 void printState(unsigned int x);
+void clearDisplay();
 void initLCDPins();
 void initLCDProcedure();
 
