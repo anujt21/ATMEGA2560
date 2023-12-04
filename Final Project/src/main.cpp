@@ -13,6 +13,12 @@
 
 #define WORD_SIZE 6
 
+typedef enum{
+  locked, unlocked, alert
+}StateType;
+volatile StateType lockState = locked; 
+
+
 int main() {
   Serial.begin(9600);
 
@@ -23,47 +29,97 @@ int main() {
   initButtons();
   initTimer0();
   initTimer1();
+  initPWMTimer3();
   initPWMTimer4();
   initLCD();
   Serial.println ("Init of LCD complete");
-
+  
   // Lock the door
   lock();
   
-
-  char savedPassword[WORD_SIZE];
-  char enteredPassword[WORD_SIZE];
+  unsigned int numStrikes = 0;
+  char savedPassword[WORD_SIZE + 1];
+  char enteredPassword[WORD_SIZE + 1];
 
   // Setup password when the system first starts
   moveCursor(0,0);
   writeString("Set Password:");
 
   getInput(savedPassword, WORD_SIZE);
+  Serial.println(savedPassword);
 
-  delayMs(1000);
+  delayMs(500);
   //Serial.println(savedPassword);
 
   moveCursor(1,0);
   writeString("Password Set!");
 
-  // Delay 3sec before clearing
-  delayMs(1000);
-  delayMs(1000);
+  // Delay 1sec before asking for password
   delayMs(1000);
 
-  clearDisplay(); // Clear
 
-  delayMs(500);
-  moveCursor(0,0);
-  writeString("Enter Password");
+  
 
   while (1) {
 
-    getInput(enteredPassword, WORD_SIZE);
+    switch(lockState){
+      case locked:
+      displayMessage("Enter Password", 0);
+      getInput(enteredPassword, WORD_SIZE);
 
-    if(checkPassword(enteredPassword, savedPassword)){
-      // open lock
-      // Press 1 to lock the door
+      if(checkPassword(enteredPassword, savedPassword) == 0){
+        // Display
+        displayMessage("Door Opened!", 1000);
+
+        // Open lock
+        unlock();
+
+        // Clear all strikes
+        numStrikes = 0;
+        
+        // Change State
+        lockState = unlocked;
+
+      }
+      else{
+        // Display
+        displayMessage("Incorrect Password", 1000);
+
+        numStrikes++;
+        if(numStrikes == 3){
+          Serial.println("Switch to alert");
+          lockState = alert;
+        }
+      }
+      break;
+
+      case unlocked:
+        
+      // Wait for the door to close
+      // Door Closes
+      // Delay time for simulation
+      delayMs(1000);
+      delayMs(1000);
+      delayMs(1000);
+      delayMs(1000);
+      delayMs(1000);
+      lock();
+      lockState = locked;
+      break;
+
+      case alert:
+      displayMessage("Alarm Acrivated", 0);
+
+      chirpingSound(5000);
+
+      // Check RFID
+      // IF RFID passes change state to locked and turn off alarm
+      // if not then stay in this state
+
+      turnOffAlarm();
+      lockState = locked;
+      break;
+
     }
 
   }

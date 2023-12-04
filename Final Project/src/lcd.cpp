@@ -125,14 +125,11 @@ void print_password_char(unsigned char c, unsigned int x){
 }
 
 
-void printState(unsigned int x){
+void displayMessage(char str[], unsigned int delay){
+    clearDisplay();
     moveCursor(0,0);
-    if(x == 0){
-        writeString("Unlocked!");
-    }
-    else if(x==1){
-        writeString("Incorrect Password");
-    }
+    writeString(str);
+    delayMs(delay);
 }
 
 

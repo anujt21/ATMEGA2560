@@ -5,6 +5,7 @@ debouncing
 */
 
 #include "timer.h"
+#include "pwm.h"
 #include <avr/io.h>
 
 //Global variable for counting ms and us
@@ -36,6 +37,29 @@ void delayMs(unsigned int delay){
     TCNT1 = 0;
 
     while(delayCounter > 0);
+
+    TCCR1B &= ~( (1 <<  CS10) | (1 <<  CS11) | (1 <<  CS12));
+}
+
+void chirpingSound(unsigned int delay){
+    delayCounter = delay;
+
+    // Set Prescalar to 64
+    TCCR1B |= (1 << CS11) | (1 << CS10);
+    TCCR1B &= ~(1 << CS12);
+
+    OCR1A = 249;
+
+    // Start timer at 0
+    TCNT1 = 0;
+    turnOnAlarm();
+    while(delayCounter > 0){
+        
+        for(int i = 1000; i < 4000; i++){
+            changeFre(i);
+        }
+    }
+    turnOffAlarm();
 
     TCCR1B &= ~( (1 <<  CS10) | (1 <<  CS11) | (1 <<  CS12));
 }
