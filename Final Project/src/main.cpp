@@ -6,16 +6,22 @@
 #include "timer.h"
 #include "pwm.h"
 #include "keypad.h"
-#include "spi.h"
-#include "pwm.h"
 #include "rfid.h"
 #include "motor.h"
+#include "switch.h"
 
 #define WORD_SIZE 6
 
 typedef enum{
   locked, unlocked, alert
 }StateType;
+
+typedef enum{
+  wait_press, debounce_press, wait_release, debounce_release
+}ButtonState;
+
+volatile ButtonState buttonState = wait_press;
+
 volatile StateType lockState = locked; 
 
 
@@ -26,6 +32,7 @@ int main() {
   sei();
 
   // Initialize all pins and components
+  initSwitch();
   initButtons();
   initTimer0();
   initTimer1();
@@ -34,6 +41,8 @@ int main() {
   initLCD();
   Serial.println ("Init of LCD complete");
   
+  // Wait for RFID to check to pass
+
   // Lock the door
   lock();
   
@@ -57,10 +66,27 @@ int main() {
   // Delay 1sec before asking for password
   delayMs(1000);
 
-
-  
-
   while (1) {
+
+
+    switch(buttonState){
+      case wait_press:
+      break;
+      
+      case debounce_press:
+      delayMs(1);
+      buttonState = wait_release;
+      break;
+
+      case wait_release:
+      break;
+      
+      case debounce_release:
+      delayMs(1);
+      buttonState = wait_press;
+      break;
+    
+    }
 
     switch(lockState){
       case locked:
@@ -98,17 +124,15 @@ int main() {
       // Wait for the door to close
       // Door Closes
       // Delay time for simulation
-      delayMs(1000);
-      delayMs(1000);
-      delayMs(1000);
-      delayMs(1000);
-      delayMs(1000);
-      lock();
-      lockState = locked;
+      
+      if(buttonState == wait_release){
+        lock();
+        lockState = locked;
+      }
       break;
 
       case alert:
-      displayMessage("Alarm Acrivated", 0);
+      displayMessage("Alarm Activated", 0);
 
       chirpingSound(5000);
 
@@ -127,4 +151,14 @@ int main() {
 
 
   return 0;
+}
+
+
+ISR(INT0_vect){
+  if(buttonState == wait_press){
+    buttonState = debounce_press;
+  }
+  else if(buttonState == wait_release){
+    buttonState = debounce_release;
+  }
 }

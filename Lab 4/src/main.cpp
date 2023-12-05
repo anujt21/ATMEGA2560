@@ -43,6 +43,8 @@ Switch  - PB3
 typedef enum{
   wait_press, debounce_press, wait_release, debounce_release, pause
 }StateType;
+
+
 volatile StateType buttonState = wait_press; 
 
 
@@ -69,8 +71,7 @@ int main(){
     unsigned int adc_value = read_adc();
     //Serial.println(adc_value);
     changeDutyCycle(adc_value);
-    
-    
+
     
     switch(buttonState){
       case wait_press:
