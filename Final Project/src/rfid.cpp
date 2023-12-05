@@ -72,3 +72,4 @@ bool compareCardID(const unsigned char* cardID, const unsigned char* validCardID
   }
   return true; // Equal
 }
+

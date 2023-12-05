@@ -21,7 +21,7 @@ The + pin is connected to E5 (3) and the - pin is connected to GND.
 ## RFID TAG:
 SDA pin 53
 SCK 52
-MOSI 21
+MOSI 51
 MISO 50
 IRQ pin 21
 GND
