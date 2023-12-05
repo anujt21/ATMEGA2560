@@ -36,9 +36,6 @@ void SPI_Init() {
     // Set MOSI(51), SCK(52), and SS as output, MISO(50) as input
     DDRB |= (1 << DDB2) | (1 << DDB1) | (1 << DDB3);
 
-    // Set MISO(50) as input
-    //DDRB &= ~(1 << DDB3);
-
     PORTE &= ~(1 << RST_PIN);
 
     // Enable SPI, Master mode, set clock rate fck/16
@@ -74,7 +71,7 @@ void initModule() {
 }
 
 // Function to read RFID data
-void readRFIDTag() {
+bool readRFIDTag() {
     // Send a command to the RC522 to start reading
     PORTB &= ~(1 << SS_PIN); // Set SS (Slave Select) low
     SPI_Transceive(RC522_REG_COMMAND);
@@ -98,6 +95,11 @@ void readRFIDTag() {
     }
 
     PORTB |= (1 << SS_PIN); // Set SS high
+
+    // Compare RFID tag ID
+    unsigned char compareResult = compareTagID(tagData, validTagID);
+
+    return compareTagID(tagData, validTagID);
 }
 
 // External interrupt service routine for RC522 module's IRQ pin
@@ -108,7 +110,7 @@ ISR(INT0_vect) {
 // Function to compare RFID tag ID
 unsigned char compareTagID(const volatile unsigned char* tagData, const unsigned char* constValidTagID){
     for (unsigned char i = 0; i < 4; ++i) {
-        if (tagData[i] != validTagID[i]) {
+        if (tagData[i] != constValidTagID[i]) {
             return 0; // Not equal
         }
     }
