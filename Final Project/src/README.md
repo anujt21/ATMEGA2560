@@ -18,3 +18,13 @@ Rows pins are connected to PL0 (49) - PL3(46) and col pins are connected to PC0 
 ## Piezo buzzer:
 The + pin is connected to E5 (3) and the - pin is connected to GND.
 
+## RFID TAG:
+SDA pin 53
+SCK 52
+MOSI 21
+MISO 50
+IRQ pin 21
+GND
+RST pin 5
+3.3v
+
