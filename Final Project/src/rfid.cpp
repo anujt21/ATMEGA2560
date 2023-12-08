@@ -33,7 +33,6 @@ bool compareCardID(const unsigned char* cardID, const unsigned char* validCardID
 void spiInit() {
   // Set MOSI (51), SCK (53), and SS (53) as output, MISO (50) as input
   DDRB |= (1 << DDB2) | (1 << DDB1) | (1 << DDB0);
-  DDRD |= (1 << DDD5);
 
   // Enable SPI, Master mode, set clock rate fck/4
   SPCR = (1 << SPE) | (1 << MSTR);

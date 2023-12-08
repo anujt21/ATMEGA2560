@@ -105,7 +105,7 @@ int main(){
       Serial.print(abs(x_value));
       Serial.print(", ");
       Serial.println(abs(y_value));
-      turnon_alarm();
+      turnOnAlarm();
     }
 
     Serial.println("X value is:");

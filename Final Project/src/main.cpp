@@ -6,7 +6,8 @@
 #include "timer.h"
 #include "pwm.h"
 #include "keypad.h"
-#include "rfid.h"
+#include "spi.h"
+//#include "rfid.h"
 #include "motor.h"
 #include "switch.h"
 
@@ -19,6 +20,13 @@ typedef enum{
 typedef enum{
   wait_press, debounce_press, wait_release, debounce_release
 }ButtonState;
+
+/*
+typedef enum faceType_enum {
+  smiley_face, frowny_face
+} face;
+
+volatile face matrixFace= smiley_face; */
 
 volatile ButtonState buttonState = wait_press;
 
@@ -39,13 +47,14 @@ int main() {
   initPWMTimer3();
   initPWMTimer4();
   initLCD();
+  //init_spi();
   Serial.println ("Init of LCD complete");
   
   // Wait for RFID to check to pass
 
   // Lock the door
   lock();
-  
+  //matrixFace = smiley_face;
   unsigned int numStrikes = 0;
   char savedPassword[WORD_SIZE + 1];
   char enteredPassword[WORD_SIZE + 1];
@@ -67,7 +76,21 @@ int main() {
   delayMs(1000);
 
   while (1) {
+    /*
+    switch (matrixFace) {
+      case smiley_face:
+        happy_face();
+      break;
 
+      case frowny_face:
+        frown_face();
+      break;
+
+      default:
+        matrixFace = smiley_face;
+      break;
+
+    }*/
 
     switch(buttonState){
       case wait_press:
@@ -115,6 +138,7 @@ int main() {
         if(numStrikes == 3){
           Serial.println("Switch to alert");
           lockState = alert;
+          //matrixFace = frowny_face;
         }
       }
       break;
