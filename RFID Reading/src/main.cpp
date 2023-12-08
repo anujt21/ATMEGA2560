@@ -5,39 +5,68 @@
 
 #include "rfid.h"
 
-#define PICC_REQIDL    0x26
+#define RST_PIN         5          // Configurable, see typical pin layout above
+#define SS_PIN          53          // Configurable, see typical pin layout above
 
 // Define the valid card ID
-const unsigned char validCardID[] = {0xD7, 0x46, 0x03, 0x53};
+byte validCardID[] = {0x35, 0x79, 0x35, 0x76};
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 int main(void) {
     Serial.begin(9600);
-
     sei();
-    unsigned char status;
-    unsigned char str[16];
-    unsigned char serNum[5];
-
-    spiInit();  // Initialize SPI
-    MFRC522_Init(); // Initialize RC522
+    //void spiInit();	
     Serial.println("Hello");
+    Serial.flush();		
+	mfrc522.PCD_Init();
+    Serial.println("Hello");
+    byte* ID;
+    unsigned int IDsize;
+    
     while (1) {
-        status = MFRC522_Request(PICC_REQIDL, str);  
-        if (status == 1) {
-            Serial.println("Card Detected");
-            status = MFRC522_Anticoll(serNum);
-            if (status == 0) {
-                // Print UID
-                Serial.print("Card UID:");
-                for (int i = 0; i < 4; i++) {
-                    Serial.print(serNum[i], HEX);
-                    if (i < 3) {
-                        Serial.print(":");
-                    }
-                }
-                Serial.println();
+        bool b = 1;
+        bool match = 1;
+        if ( ! mfrc522.PICC_IsNewCardPresent()) {
+		    b = 0;
+	    }
+
+        // Select one of the cards
+        if(b == 1){
+            if ( ! mfrc522.PICC_ReadCardSerial()) {
+                b = 0;
             }
         }
-        _delay_ms(1000); // Delay between reads
+
+        // Dump debug info about the card; PICC_HaltA() is automatically called
+        if(b == 1){
+	        //mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid));
+
+            ID = mfrc522.PICC_GetUid(&(mfrc522.uid));
+            IDsize = mfrc522.PICC_GetSize(&(mfrc522.uid));
+            Serial.println("ID is:");
+            for(byte i=0;i<IDsize;i++){
+                Serial.print(ID[i] < 0x10 ? " 0" : " ");
+                Serial.print(ID[i], HEX);               
+            }
+            Serial.print("\n");
+
+            for(byte i=0;i<4;i++){
+                if(validCardID[i] != ID[i]){
+                    match=0;
+                    break;
+                }
+            }
+
+            if(match == 1){
+                Serial.println("Valid Card");
+            }
+            else{
+                Serial.println("Invalid Card");
+            }
+        }
+
+        _delay_ms(100);
+
     }
 }
